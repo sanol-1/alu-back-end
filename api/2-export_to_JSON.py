@@ -1,23 +1,20 @@
-
 #!/usr/bin/python3
-"""Export an employee's TODO list to a JSON file using a REST API."""
+"""Export an employee's TODO list to a JSON file."""
 import json
 import requests
 import sys
 
+user_id = sys.argv[1]
+base_url = "https://jsonplaceholder.typicode.com"
 
-if __name__ == "__main__":
-    base_url = "https://jsonplaceholder.typicode.com"
-    employee_id = sys.argv[1]
+user = requests.get("{}/users/{}".format(base_url, user_id)).json()
+todos = requests.get("{}/todos".format(base_url),
+                     params={"userId": user_id}).json()
+username = user.get("username")
 
-    user = requests.get("{}/users/{}".format(base_url, employee_id)).json()
-    todos = requests.get("{}/todos".format(base_url),
-                         params={"userId": employee_id}).json()
+data = {user_id: [{"task": t.get("title"),
+                   "completed": t.get("completed"),
+                   "username": username} for t in todos]}
 
-    username = user.get("username")
-    data = {employee_id: [{"task": todo.get("title"),
-                           "completed": todo.get("completed"),
-                           "username": username} for todo in todos]}
-
-    with open("{}.json".format(employee_id), "w") as json_file:
-        json.dump(data, json_file)
+with open("{}.json".format(user_id), "w") as f:
+    json.dump(data, f)
